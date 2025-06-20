@@ -170,7 +170,7 @@ export class AwsBedrockHandler implements ApiHandler {
 	}> {
 		// Configure provider options
 		const providerOptions: ProviderChainOptions = {}
-		if (this.options.awsUseProfile) {
+		if (this.options.awsUseProfile || this.options.awsAuthentication === "profile") {
 			// For profile-based auth, always use ignoreCache to detect credential file changes
 			// This solves the AWS Identity Manager issue where credential files change externally
 			providerOptions.ignoreCache = true
@@ -184,7 +184,10 @@ export class AwsBedrockHandler implements ApiHandler {
 		return await AwsBedrockHandler.withTempEnv(
 			() => {
 				AwsBedrockHandler.setEnv("AWS_REGION", this.options.awsRegion)
-				if (this.options.awsUseProfile) {
+				if (this.options.awsAuthentication === "profile" || this.options.awsUseProfile) {
+					// delete process.env["AWS_ACCESS_KEY_ID"]
+					// delete process.env["AWS_SECRET_ACCESS_KEY"]
+					// delete process.env["AWS_SESSION_TOKEN"]
 					AwsBedrockHandler.setEnv("AWS_PROFILE", this.options.awsProfile)
 				} else {
 					delete process.env["AWS_PROFILE"]
@@ -209,14 +212,24 @@ export class AwsBedrockHandler implements ApiHandler {
 	 */
 	private async getBedrockClient(): Promise<BedrockRuntimeClient> {
 		const credentials = await this.getAwsCredentials()
-
-		return new BedrockRuntimeClient({
-			region: this.getRegion(),
+		let auth: any = {
 			credentials: {
 				accessKeyId: credentials.accessKeyId,
 				secretAccessKey: credentials.secretAccessKey,
 				sessionToken: credentials.sessionToken,
 			},
+		}
+
+		if (this.options.awsAuthentication === "apikey") {
+			auth = {
+				token: { token: this.options.awsBedrockApiKey },
+				authSchemePreference: ["httpBearerAuth"],
+			}
+		}
+
+		return new BedrockRuntimeClient({
+			region: this.getRegion(),
+			...auth,
 			...(this.options.awsBedrockEndpoint && { endpoint: this.options.awsBedrockEndpoint }),
 		})
 	}
