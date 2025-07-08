@@ -16,6 +16,8 @@ description: "Learn how to set up AWS Bedrock with Cline using credentials authe
 
 #### 1.1 Individual user setup - Create a Bedrock API Key
 
+For more detailed instructions check the [documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html).
+
 1. **Sign in to the AWS Management Console:**\
    [AWS Console](https://aws.amazon.com/console/)
 2. **Access Bedrock Console:**
@@ -29,10 +31,9 @@ To ensure Cline can interact with AWS Bedrock, your IAM user or role needs speci
 
 -   `bedrock:InvokeModel`
 -   `bedrock:InvokeModelWithResponseStream`
+-   `bedrock:CallWithBearerToken`
 
 You can create a custom IAM policy with these permissions and attach it to your IAM user or role.
-
-**Option 1: Minimal Permissions (Recommended for Production & Least Privilege)**
 
 1.  In the AWS IAM console, create a new policy.
 2.  Use the JSON editor to add the following policy document:
@@ -42,18 +43,13 @@ You can create a custom IAM policy with these permissions and attach it to your 
     	"Statement": [
     		{
     			"Effect": "Allow",
-    			"Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+    			"Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream", "bedrock:CallWithBearerToken"],
     			"Resource": "*" // For enhanced security, scope this to specific model ARNs if possible.
     		}
     	]
     }
     ```
-3.  Name the policy (e.g., `ClineBedrockInvokeAccess`) and attach it to your IAM user or role.
-
-**Option 2: Use the Managed Policy (Simpler Initial Setup)**
-
--   Alternatively, you can attach the AWS managed policy **`AmazonBedrockLimitedAccess`**. This grants broader permissions, including the ability to list models, manage provisioning, and other Bedrock features. This might be simpler for initial setup or if you require these wider capabilities.
-    [View AmazonBedrockFullAccess Policy Details](https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam.html)
+3.  Name the policy (e.g., `ClineBedrockInvokeAccess`) and attach it to the IAM user associated with the key you created. The IAM user and the API key have the same prefix.
 
 **Important Considerations:**
 
