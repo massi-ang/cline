@@ -42,7 +42,8 @@ export const BedrockProvider = ({ showModelOptions, isPopup }: BedrockProviderPr
 				<VSCodeRadio value="credentials">AWS Credentials</VSCodeRadio>
 			</VSCodeRadioGroup>
 
-			{apiConfiguration?.awsUseProfile || apiConfiguration?.awsAuthentication == "profile" ? (
+			{(apiConfiguration?.awsAuthentication === undefined && apiConfiguration?.awsUseProfile) ||
+			apiConfiguration?.awsAuthentication == "profile" ? (
 				<DebouncedTextField
 					key="profile"
 					initialValue={apiConfiguration?.awsProfile ?? ""}

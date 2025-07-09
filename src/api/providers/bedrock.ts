@@ -185,9 +185,6 @@ export class AwsBedrockHandler implements ApiHandler {
 			() => {
 				AwsBedrockHandler.setEnv("AWS_REGION", this.options.awsRegion)
 				if (this.options.awsAuthentication === "profile" || this.options.awsUseProfile) {
-					// delete process.env["AWS_ACCESS_KEY_ID"]
-					// delete process.env["AWS_SECRET_ACCESS_KEY"]
-					// delete process.env["AWS_SESSION_TOKEN"]
 					AwsBedrockHandler.setEnv("AWS_PROFILE", this.options.awsProfile)
 				} else {
 					delete process.env["AWS_PROFILE"]
@@ -211,22 +208,24 @@ export class AwsBedrockHandler implements ApiHandler {
 	 * Creates a BedrockRuntimeClient with the appropriate credentials
 	 */
 	private async getBedrockClient(): Promise<BedrockRuntimeClient> {
-		const credentials = await this.getAwsCredentials()
-		let auth: any = {
-			credentials: {
-				accessKeyId: credentials.accessKeyId,
-				secretAccessKey: credentials.secretAccessKey,
-				sessionToken: credentials.sessionToken,
-			},
-		}
+		let auth: any
 
 		if (this.options.awsAuthentication === "apikey") {
 			auth = {
 				token: { token: this.options.awsBedrockApiKey },
 				authSchemePreference: ["httpBearerAuth"],
 			}
+		} else {
+			const credentials = await this.getAwsCredentials()
+			auth = {
+				credentials: {
+					accessKeyId: credentials.accessKeyId,
+					secretAccessKey: credentials.secretAccessKey,
+					sessionToken: credentials.sessionToken,
+				},
+			}
 		}
-
+		console.log({ auth })
 		return new BedrockRuntimeClient({
 			region: this.getRegion(),
 			...auth,
